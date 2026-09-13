@@ -16,6 +16,7 @@ pipeline {
         NODE_VERSION  = '22'
         APP_ENV       = 'testing'
         APP_KEY       = 'base64:placeholder_replaced_by_key_generate'
+        PATH          = "/home/adminx/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${env.PATH}"
     }
 
     stages {
