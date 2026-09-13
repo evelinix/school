@@ -46,8 +46,8 @@ pipeline {
             steps {
                 sh '''
                     [ -f .env ] || cp .env.example .env
-                    grep -q "^APP_KEY=" .env || echo "APP_KEY=" >> .env
-                    php artisan key:generate --force
+                    GENERATED_KEY=$(php -r "echo base64_encode(random_bytes(32));")
+                    sed -i "s|^APP_KEY=.*|APP_KEY=base64:${GENERATED_KEY}|" .env
                     php artisan migrate --force
                 '''
             }
