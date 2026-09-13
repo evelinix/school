@@ -7,6 +7,27 @@ import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { configureEcho } from '@laravel/echo-react';
 
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js', { scope: '/' })
+            .catch((err) => console.error('[SW] Registration failed:', err));
+    });
+}
+
+// Register protocol handler: school:// → web+school://
+if ('registerProtocolHandler' in navigator) {
+    try {
+        navigator.registerProtocolHandler(
+            'web+school',
+            '/?protocol=%s',
+        );
+    } catch {
+        // Silently ignore — browser may block if not triggered by user gesture
+    }
+}
+
 configureEcho({
     broadcaster: 'reverb',
 });
