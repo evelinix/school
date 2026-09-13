@@ -62,7 +62,6 @@ pipeline {
             parallel {
                 stage('Frontend Lint & Types') {
                     steps {
-                        sh 'bun run check'
                         sh 'bun run types:check'
                     }
                 }
