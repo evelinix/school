@@ -28,5 +28,5 @@ yarn-error.log
 /.vscode
 /.zed
 docs/*
-public/php_check/*
+.kiro/*
 public/php_check.php
