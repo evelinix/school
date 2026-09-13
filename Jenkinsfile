@@ -46,6 +46,7 @@ pipeline {
             steps {
                 sh '''
                     [ -f .env ] || cp .env.example .env
+                    grep -q "^APP_KEY=" .env || echo "APP_KEY=" >> .env
                     php artisan key:generate --force
                     php artisan migrate --force
                 '''
