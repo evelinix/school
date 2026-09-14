@@ -12,9 +12,9 @@
 //   1. Buat job "school-dependabot" tipe Pipeline (bukan Multibranch),
 //      "Pipeline script from SCM" → script path: Jenkinsfile.dependabot,
 //      trigger "Poll SCM" / "Build periodically" (mis. `H 6 * * 1`).
-//   2. Credential GitHub PAT sudah ada di Jenkins bernama **github-pat**
-//      (dipakai job `school` juga) — GITHUB_CREDENTIALS_ID sudah mengarah
-//      ke situ; buat baru hanya jika scope-nya kurang.
+//   2. Credential GitHub di Jenkins bernama **github-pat** — tipe
+//      Username/Password (username + PAT). GITHUB_CREDENTIALS_ID sudah
+//      mengarah ke situ; buat baru hanya jika scope-nya kurang.
 //   3. Pastikan agent punya Docker + akses jaringan ke github.com.
 //
 // CATATAN HOST: remote lokal memakai alias SSH `evelin-github.com` (mengarah ke
@@ -57,7 +57,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_ACCESS_TOKEN')]) {
                     sh '''
                         set -eu
                         rm -rf "${CHKOUT_DIR}" "${JOB_DIR}"
@@ -73,7 +73,7 @@ pipeline {
         // Job-file + credentials-file disiapkan per ekosistem.
         stage('Dependabot composer') {
             steps {
-                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_ACCESS_TOKEN')]) {
                     sh '''
                         set -eu
                         ECOSYSTEM="composer"
@@ -159,7 +159,7 @@ pipeline {
 
         stage('Dependabot npm (bun)') {
             steps {
-                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_ACCESS_TOKEN')]) {
                     sh '''
                         set -eu
                         ECOSYSTEM="npm"
