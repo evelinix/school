@@ -9,6 +9,20 @@ Legend: ✨ feat · 🐛 fix · ⚡ perf · ♻️ refactor · 📝 docs · 🔧
 
 ---
 
+## [2026.09.2] — 2026-09-14 · "AI Guideline & Dev Gate" 🧭
+
+### 📝 Documentation
+- `docs: tambah panduan AI (folder .ai/) dan AGENTS.md berbahasa Indonesia` — status stack, arsitektur, standar kode, testing, workflow, checklist, decision log, rules (#—). <!-- TODO: nomor PR -->
+- `docs: pindahkan aturan penulisan CHANGELOG ke .ai/changelog-rule.md` dan tambah dokumentasi folder `docs/` (#—). <!-- TODO: nomor PR -->
+- `docs: tambah plan gate dokumen` — `docs/current.md` (plan aktif, wajib disetujui) & `docs/done/` (arsip plan selesai), termasuk mini-plan untuk tugas kecil (#—). <!-- TODO: nomor PR -->
+- `docs: sinkronkan klaim status dan catat decision log serta rules` — D-08 (gate husky), `record-rule` untuk husky & plan gate, pertegas keamanan kredensial di respons (#—). <!-- TODO: nomor PR -->
+
+### 🔧 Chore
+- `chore: tambah fondasi spatie/laravel-permission & laravel-data dan nwidart/laravel-modules` — config, migrasi `permission_tables`, stubs, loader vite (#—). <!-- TODO: nomor PR -->
+- `chore: perbarui hook Husky sesuai gate proyek` — pre-commit `pint --dirty` + `types:check` (scoped ke file JS), pre-push `composer test` + `types:check` (#—). <!-- TODO: nomor PR -->
+
+---
+
 ## [2026.09.1] — 2026-09-14 · "CI & PWA" 🚀
 
 ### ✨ Added
