@@ -33,7 +33,7 @@ Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada d
 
 ## Commands — yang paling sering dipakai
 - Dev server: `bun run dev` · Build: `bun run build` · Typecheck: `bun run types:check` (`tsc --noEmit`)
-- `bun run check` / `check:fix` = vp lint + format + typecheck dengan `denyWarnings: true`. **Lewati di headless/CI**: dikenal crash dengan DataCloneError di sana, jadi Jenkins hanya menjalankan `types:check`. Lokal, `bun run check` adalah pintu masuk JS.
+- `bun run check` / `check:fix` = vp lint + format + typecheck dengan `denyWarnings: true`. **Lewati di headless/CI**: dikenal crash dengan DataCloneError di sana, jadi Jenkins hanya menjalankan `types:check`. Lokal, `bun run check` adalah pintu masuk JS. **Setelah mengubah file JS/TS apa pun, jalankan `bun run check:fix` sebelum commit** (padanan reminder `pint --dirty` untuk PHP; pre-commit hanya menjamin `types:check`).
 - Gate PHP/JS lengkap: `composer test` (menjalankan `config:clear` → pint `--test` → phpstan level 7 → `php artisan test`). Run fokus lebih cepat: `composer lint:check` (pint) dan `composer types:check` (phpstan).
 - Test: `vendor/bin/pest <path>` atau `php artisan test --compact [--filter=...]`. CI berjalan paralel (`--parallel`, paratest). Test memakai sqlite `:memory:` — tanpa DB, tanpa service.
 - Hook Husky: pre-commit menjalankan `vendor/bin/pint --dirty` lalu `bun run types:check`; pre-push menjalankan `composer test` lalu `bun run types:check` (gate PHP penuh + gate JS versi CI). Setelah mengedit PHP apa pun jalankan `vendor/bin/pint --dirty` sebelum commit.

@@ -33,6 +33,8 @@ vendor/bin/phpstan analyse            # static analysis (level 7)
 composer test               # gate lengkap: config:clear → pint --test → phpstan → artisan test
 ```
 
+> Setelah mengubah file JS/TS apa pun, jalankan `bun run check:fix` sebelum commit (padanan reminder `pint --dirty`; pre-commit hanya menjamin `types:check`).
+
 ## Testing
 
 ```bash

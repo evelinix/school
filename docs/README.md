@@ -9,8 +9,8 @@ Dokumen rancangan & catatan proyek School Platform Enterprise. Dibagi peran deng
 | `README.md` | Indeks dokumentasi ini |
 | `current.md` | **Plan tugas yang sedang berjalan** — wajib disetujui sebelum dikerjakan (Aturan Emas #9 / `.ai/workflow.md` §0); saat tugas baru dimulai, pindahkan (rename) ke `docs/done/` |
 | `done/` | **Arsip plan** tugas yang sudah diselesaikan (`done/{nomor_nama_tugas}.md`) |
-| `all.md` | Master plan & desain keseluruhan (acuan rancangan — tidak di-track di git) |
-| `architecture/file-structure.md` | Struktur folder target modular monolith (acuan rancangan — tidak di-track di git) |
+| `all.md` | Master plan & desain keseluruhan (acuan rancangan — ter-track di git; jaga bebas-secret) |
+| `architecture/file-structure.md` | Struktur folder target modular monolith (acuan rancangan — ter-track di git; jaga bebas-secret) |
 
 Dokumen yang berada di repo namun relevan:
 
@@ -35,5 +35,5 @@ Saat merilis (menulis `CHANGELOG.md`), ikuti **`.ai/changelog-rule.md`** — for
 
 - Jangan commit `.env` atau kredensial asli (Jenkins meregenerasi APP_KEY dari `.env.example`).
 - Bila sebuah dokumen berisi info server/kredensial, taruh di `.not_commit/`, bukan di `docs/`.
-- Materi rancangan (`all.md`, `file-structure.md`) sengaja tidak di-track; verifikasi bebas-secret sebelum dipindah ke `.not_commit/` atau di-commit.
+- Materi rancangan (`all.md`, `file-structure.md`) kini **ter-track di git**; verifikasi bebas-secret sebelum menambah konten, dan pindahkan hal yang berisi kredensial ke `.not_commit/`.
 - Siklus `current.md`/`done/`: sebelum mengerjakan tugas, cek `docs/current.md`; bila ada arsipkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru, dan tunggu persetujuan — detail di `.ai/workflow.md` §0.

@@ -74,6 +74,6 @@ Dependensi: `Core ← semua`; `Kelas ← Siswa, Guru, Raport`; `BankSoal ← Cat
 
 ## Sumber Kebenaran
 
-- **Master plan & desain AI:** `docs/all.md`, `docs/architecture/file-structure.md`, `docs/README.md` (acuan rancangan — tidak di-track / tidak di-commit)
+- **Master plan & desain AI:** `docs/all.md`, `docs/architecture/file-structure.md`, `docs/README.md` (acuan rancangan — ter-track di git; pastikan bebas-secret)
 - **Changelog:** `CHANGELOG.md` (CalVer, Bahasa Indonesia, ikuti `.ai/changelog-rule.md`)
 - **Aturan ter-record:** `.ai/rules/` bila ada (dikelola Boost `record-rule`)
