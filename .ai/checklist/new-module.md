@@ -40,11 +40,19 @@
 - [ ] Happy path + minimal 1 edge case
 - [ ] Test otorisasi (tanpa permission → 403)
 
+## Seeding & Otorisasi (spatie/laravel-permission)
+
+- [ ] `PermissionSeeder` deterministik — naming konsisten `modul.bagian.aksi` (mis. `core.role.index`), tanpa faker/random
+- [ ] Assignment Role↔Permission dilakukan di seeder, bukan manual/tinker
+- [ ] Verifikasi jalan tanpa error: `php artisan db:seed --class=PermissionSeeder`
+- [ ] Feature test otorisasi: dengan permission → sukses; tanpa → 403
+- [ ] Ralat klaim "belum ada role" di `.ai/context.md` di commit yang sama saat seeder pertama dirilis
+
 ## Dokumentasi
 
 - [ ] Update `docs/modules/{slug}.md`
 - [ ] Daftarkan permission di `PermissionSeeder`
-- [ ] Update `.ai/` bila ada perubahan arsitektur
+- [ ] Update `.ai/` bila ada perubahan arsitektur (sinkron garis status `.ai/context.md` — lihat `.ai/workflow.md` → "Menjaga `.ai/` Tetap Aktual")
 
 ## Final Check
 

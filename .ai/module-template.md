@@ -88,7 +88,7 @@ final class NamaModulServiceProvider extends ServiceProvider
 - `vite-module-loader.js` membaca `modules_statuses.json` (root) + `Modules/*/vite.config.js`.
 - **Status sekarang:** `vite.config.ts` BELUM meng-import `vite-module-loader` — loader belum aktif di build. Urutan mengaktifkannya:
   1. Kolok `collectModuleAssetsPaths` ke `vite.config.ts` (plugin `vite-module-loader`).
-  2. Pastikan `modules_statuses.json` di root ada — tanpa file ini loader **error saat dijalankan** (bukan warning).
+  2. Pastikan `modules_statuses.json` di root ada — tanpa file ini loader **error saat dijalankan** (bukan warning). File ini **wajib di-commit ke VCS** (state modul aktif untuk semua dev) — jangan masuk `.gitignore`.
   3. Modul yang aktif menambahkan path asset lewat `vite.config.js` miliknya sendiri.
 - Tanpa langkah di atas, asset/halaman modul **tidak ikut ter-build** → frontend modul 404.
 - Baris loader harus terhubung di entry `resources/js` bila modul membawa asset sendiri.

@@ -64,8 +64,9 @@ Dependensi: `Core ← semua`; `Kelas ← Siswa, Guru, Raport`; `BankSoal ← Cat
 ## Status Saat Ini (penting, agar tidak salah asumsi)
 
 - **PostgreSQL dev TIDAK ada di docker-compose** — compose hanya `mailpit` + `rustfs`. DB dev adalah Postgres eksternal yang harus dijalankan sendiri sebelum `migrate`/`serve`.
-- **Belum ada `Modules/`** — `nwidart/laravel-modules` baru dikonfigurasi (`config/modules.php`, `stubs/`, `vite-module-loader.js`), belum ada modul.
-- **spatie/laravel-permission & laravel-data baru ditambahkan** — config + migrasi `create_permission_tables` masih uncommitted, belum ada role/permission yang di-assign.
+- **Belum ada `Modules/` dan `modules_statuses.json`** — `nwidart/laravel-modules` sudah dikonfigurasi (`config/modules.php`, `stubs/`, `vite-module-loader.js`, semua sudah di-commit), belum ada modul.
+- **`modules_statuses.json` = state bersama** — dibuat otomatis saat modul pertama di-enable; WAJIB di-commit ke VCS, JANGAN masuk `.gitignore`.
+- **spatie/laravel-permission & laravel-data terpasang** — config + migrasi `create_permission_tables` sudah di-commit; **belum ada `PermissionSeeder`/role yang di-assign**.
 - **Reverb belum jalan** — broadcasting adalah scaffolding.
 - **Tidak ada route `/api/...`** — masih web-only (Inertia). API `/api/v1` adalah target.
 - `User` model memakai `PasskeyAuthenticatable`, `TwoFactorAuthenticatable` (Fortify).

@@ -28,6 +28,12 @@ Ringkasan satu perintah: `composer test` (config:clear → pint --test → phpst
 
 - Bila perubahan menyentuh status di `.ai/context.md` (stack, asset, modul, permission, Reverb, dependency, command), perbarui baris bersangkutan **di commit yang sama** dengan perubahan tersebut — bukan commit/doc terpisah.
 - Kalimat "belum/target/aktual" di `.ai/` adalah fakta yang mudah basi; jika AGENTS.md/context.md mulai bertentangan dengan repo, ralat teksnya dibanding mengikuti teks lama.
+- **Pemicu wajib sinkron `context.md` di commit yang sama:**
+  1. Modul pertama dibuat / status `modules_statuses.json` berubah.
+  2. `laravel/reverb` (atau broadcasting lain) benar-benar terinstal & jalan.
+  3. Route `/api/*` pertama dibuat + Sanctum/guard API terpasang.
+  4. `PermissionSeeder` pertama (role↔permission) di-commit.
+  5. Perubahan stack/dependency utama (tambah/hapus package inti, migrasi storage, dll).
 
 ## Merge Ditolak Jika
 
