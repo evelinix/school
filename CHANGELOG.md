@@ -9,6 +9,13 @@ Legend: ✨ feat · 🐛 fix · ⚡ perf · ♻️ refactor · 📝 docs · 🔧
 
 ---
 
+## [2026.09.3] — 2026-09-14 · "Dependabot via Jenkins" 🐘
+
+### 🔧 Chore
+- `chore: migrasi automasi update dependency ke Jenkins` — tambah `Jenkinsfile.dependabot` (job terpisah, dependabot-core via Docker untuk `composer` & `npm`, dry-run + buka PR di `github.com`), hapus `.github/dependabot.yml` (#—). <!-- TODO: nomor PR -->
+
+---
+
 ## [2026.09.2] — 2026-09-14 · "AI Guideline & Dev Gate" 🧭
 
 ### 📝 Documentation

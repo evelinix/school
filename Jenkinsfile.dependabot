@@ -1,0 +1,256 @@
+// Jenkinsfile.dependabot — Job dependabot (update dependency otomatis)
+//
+// TERPISAH dari Jenkinsfile (CI per-push). Tidak terpicu githubPush().
+//
+// Setup manual di Jenkins (sekali):
+//   1. Buat job "school-dependabot" tipe Pipeline (bukan Multibranch),
+//      "Pipeline script from SCM" → script path: Jenkinsfile.dependabot,
+//      trigger "Poll SCM" / "Build periodically" (mis. `H 6 * * 1`).
+//   2. Buat Credential GitHub PAT scope `repo` (github.com) dengan ID sesuai
+//      parameter GITHUB_CREDENTIALS_ID (default: github-token).
+//   3. Pastikan agent punya Docker + akses jaringan ke github.com.
+//
+// CATATAN HOST: remote lokal memakai alias SSH `evelin-github.com` (mengarah ke
+// github.com), tetapi Jenkins memakai host publik **github.com** langsung.
+//
+// CATATAN VALIDASI:
+//   - Endpoint API = `https://api.github.com/`.
+//   - Bentuk `credentials-file` adalah asumsi (git_source); verifikasi pada
+//     dry-run pertama.
+//   - Dukungan `bun.lock` di updater npm dependabot-core belum dijamin penuh;
+//     bila gagal, pertimbangkan fallback Renovate self-hosted.
+
+pipeline {
+    agent { label 'linux-agent' }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    triggers {
+        cron('H 6 * * 1')
+    }
+
+    parameters {
+        booleanParam(name: 'DRY_RUN', defaultValue: false,
+                     description: 'Hanya jalankan update_files tanpa push/PR')
+        string(name: 'DEPENDABOT_VERSION', defaultValue: 'latest',
+               description: 'Versi image ghcr.io/dependabot/dependabot-core — pin setelah validasi')
+        string(name: 'GITHUB_CREDENTIALS_ID', defaultValue: 'github-token',
+               description: 'ID credential GitHub PAT di Jenkins')
+    }
+
+    environment {
+        PATH = "/home/adminx/.bun/bin:${env.PATH}"
+        REPO_OWNER  = 'evelinix'
+        REPO_NAME   = 'school'
+        GIT_HOST = 'github.com'
+        GH_API   = 'https://api.github.com/'
+        CHKOUT_DIR  = "${WORKSPACE}/repo"
+        JOB_DIR     = "${WORKSPACE}/dependabot"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                    sh '''
+                        set -eu
+                        rm -rf "${CHKOUT_DIR}" "${JOB_DIR}"
+                        mkdir -p "${CHKOUT_DIR}" "${JOB_DIR}"
+                        git clone --depth 1 \
+                            "https://x-access-token:${GITHUB_ACCESS_TOKEN}@${GIT_HOST}/${REPO_OWNER}/${REPO_NAME}.git" \
+                            "${CHKOUT_DIR}"
+                    '''
+                }
+            }
+        }
+
+        // Job-file + credentials-file disiapkan per ekosistem.
+        stage('Dependabot composer') {
+            steps {
+                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                    sh '''
+                        set -eu
+                        ECOSYSTEM="composer"
+                        BRANCH="dependabot/${ECOSYSTEM}/update-$(date +%Y%m%dT%H%M)"
+                        OUT_DIR="${JOB_DIR}/out-${ECOSYSTEM}"
+                        mkdir -p "${OUT_DIR}"
+
+                        cat > "${JOB_DIR}/job-${ECOSYSTEM}.json" <<JSON
+                                {
+                                    "job": {
+                                        "package-manager": "${ECOSYSTEM}",
+                                        "source": {
+                                            "provider": "github",
+                                            "repo": "${REPO_OWNER}/${REPO_NAME}",
+                                            "branch": "main",
+                                            "hostname": "${GIT_HOST}",
+                                            "api-endpoint": "${GH_API}",
+                                            "directories": ["/"]
+                                        },
+                                        "allowed-updates": [{"update-type": "all"}],
+                                        "existing-pull-requests": [],
+                                        "ignore-conditions": [],
+                                        "updates": [],
+                                        "reject-external-code": true
+                                    },
+                                    "credentials": []
+                                }
+                        JSON
+
+                        cat > "${JOB_DIR}/credentials-${ECOSYSTEM}.json" <<JSON
+                                [
+                                    {
+                                        "type": "git_source",
+                                        "host": "${GIT_HOST}",
+                                        "username": "x-access-token",
+                                        "password": "${GITHUB_ACCESS_TOKEN}"
+                                    }
+                                ]
+                        JSON
+
+                        docker run --rm \
+                            -v "${CHKOUT_DIR}:/home/dependabot/dependabot-core/repo" \
+                            -v "${JOB_DIR}:/home/dependabot/jobs" \
+                            -e GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" \
+                            ghcr.io/dependabot/dependabot-core:${DEPENDABOT_VERSION} \
+                            update_files \
+                            --job-file "/home/dependabot/jobs/job-${ECOSYSTEM}.json" \
+                            --credentials-file "/home/dependabot/jobs/credentials-${ECOSYSTEM}.json" \
+                            --output "/home/dependabot/jobs/out-${ECOSYSTEM}"
+
+                        cd "${CHKOUT_DIR}"
+                        if [ "$(git status --porcelain | wc -l)" -eq 0 ]; then
+                            echo "Tidak ada update untuk ${ECOSYSTEM}; selesai."
+                            exit 0
+                        fi
+                        echo "Update ${ECOSYSTEM} ditemukan: $(git status --porcelain | wc -l) file berubah."
+
+                        if [ "${DRY_RUN}" = "true" ]; then
+                            echo "[DRY_RUN] Lewati push/PR untuk ${ECOSYSTEM}."
+                            exit 0
+                        fi
+
+                        git checkout -b "${BRANCH}"
+                        git add -A
+                        git -c user.name="dependabot[bot]" -c user.email="dependabot[bot]@evelin.github" \
+                            commit -m "build(deps): update ${ECOSYSTEM} dependencies"
+                        git push "https://x-access-token:${GITHUB_ACCESS_TOKEN}@${GIT_HOST}/${REPO_OWNER}/${REPO_NAME}.git" \
+                            "${BRANCH}"
+
+                        curl -fsS -X POST "${GH_API}repos/${REPO_OWNER}/${REPO_NAME}/pulls" \
+                            -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" \
+                            -H "Content-Type: application/json" \
+                            -d "{
+                                \\"title\\": \\"build(deps): update ${ECOSYSTEM} dependencies\\",
+                                \\"head\\": \\"${BRANCH}\\",
+                                \\"base\\": \\"main\\",
+                                \\"body\\": \\"Update otomatis dependabot (${ECOSYSTEM}).\\"
+                            }" | tee "${JOB_DIR}/pr-${ECOSYSTEM}.json"
+                    '''
+                }
+            }
+        }
+
+        stage('Dependabot npm (bun)') {
+            steps {
+                withCredentials([string(credentialsId: "${params.GITHUB_CREDENTIALS_ID}", variable: 'GITHUB_ACCESS_TOKEN')]) {
+                    sh '''
+                        set -eu
+                        ECOSYSTEM="npm"
+                        BRANCH="dependabot/${ECOSYSTEM}/update-$(date +%Y%m%dT%H%M)"
+                        OUT_DIR="${JOB_DIR}/out-${ECOSYSTEM}"
+                        mkdir -p "${OUT_DIR}"
+
+                        cat > "${JOB_DIR}/job-${ECOSYSTEM}.json" <<JSON
+                                {
+                                    "job": {
+                                        "package-manager": "${ECOSYSTEM}",
+                                        "source": {
+                                            "provider": "github",
+                                            "repo": "${REPO_OWNER}/${REPO_NAME}",
+                                            "branch": "main",
+                                            "hostname": "${GIT_HOST}",
+                                            "api-endpoint": "${GH_API}",
+                                            "directories": ["/"]
+                                        },
+                                        "allowed-updates": [{"update-type": "all"}],
+                                        "existing-pull-requests": [],
+                                        "ignore-conditions": [],
+                                        "updates": [],
+                                        "reject-external-code": true
+                                    },
+                                    "credentials": []
+                                }
+                        JSON
+
+                        cat > "${JOB_DIR}/credentials-${ECOSYSTEM}.json" <<JSON
+                                [
+                                    {
+                                        "type": "git_source",
+                                        "host": "${GIT_HOST}",
+                                        "username": "x-access-token",
+                                        "password": "${GITHUB_ACCESS_TOKEN}"
+                                    }
+                                ]
+                        JSON
+
+                        docker run --rm \
+                            -v "${CHKOUT_DIR}:/home/dependabot/dependabot-core/repo" \
+                            -v "${JOB_DIR}:/home/dependabot/jobs" \
+                            -e GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" \
+                            ghcr.io/dependabot/dependabot-core:${DEPENDABOT_VERSION} \
+                            update_files \
+                            --job-file "/home/dependabot/jobs/job-${ECOSYSTEM}.json" \
+                            --credentials-file "/home/dependabot/jobs/credentials-${ECOSYSTEM}.json" \
+                            --output "/home/dependabot/jobs/out-${ECOSYSTEM}"
+
+                        cd "${CHKOUT_DIR}"
+                        if [ "$(git status --porcelain | wc -l)" -eq 0 ]; then
+                            echo "Tidak ada update untuk ${ECOSYSTEM}; selesai."
+                            exit 0
+                        fi
+                        echo "Update ${ECOSYSTEM} ditemukan: $(git status --porcelain | wc -l) file berubah."
+
+                        if [ "${DRY_RUN}" = "true" ]; then
+                            echo "[DRY_RUN] Lewati push/PR untuk ${ECOSYSTEM}."
+                            exit 0
+                        fi
+
+                        git checkout -b "${BRANCH}"
+                        git add -A
+                        git -c user.name="dependabot[bot]" -c user.email="dependabot[bot]@evelin.github" \
+                            commit -m "build(deps): update ${ECOSYSTEM} dependencies"
+                        git push "https://x-access-token:${GITHUB_ACCESS_TOKEN}@${GIT_HOST}/${REPO_OWNER}/${REPO_NAME}.git" \
+                            "${BRANCH}"
+
+                        curl -fsS -X POST "${GH_API}repos/${REPO_OWNER}/${REPO_NAME}/pulls" \
+                            -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" \
+                            -H "Content-Type: application/json" \
+                            -d "{
+                                \\"title\\": \\"build(deps): update ${ECOSYSTEM} dependencies\\",
+                                \\"head\\": \\"${BRANCH}\\",
+                                \\"base\\": \\"main\\",
+                                \\"body\\": \\"Update otomatis dependabot (${ECOSYSTEM}).\\"
+                            }" | tee "${JOB_DIR}/pr-${ECOSYSTEM}.json"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Job dependabot selesai; log di build #${env.BUILD_NUMBER}"
+        }
+        failure {
+            echo "❌ Job dependabot gagal — cek log build #${env.BUILD_NUMBER}"
+        }
+        always {
+            archiveArtifacts artifacts: 'dependabot/**', allowEmptyArchive: true
+            cleanWs()
+        }
+    }
+}

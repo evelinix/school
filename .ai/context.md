@@ -27,7 +27,7 @@ Platform terpadu manajemen sekolah menengah di Indonesia:
 | Build | **bun** + `vite-plus` (Vite 8), Wayfinder (typed routes) |
 | Realtime | Echo + Reverb — **TERKONFIGURASI tapi `laravel/reverb` BELUM diinstal** |
 | Storage | disk `s3` → RustFS (S3 lokal di docker-compose, endpoint `127.0.0.1:9000`) |
-| CI/CD | Jenkins (`Jenkinsfile`) via **GitHub webhook** (bukan GitLab) |
+| CI/CD | Jenkins (`Jenkinsfile`) via **GitHub webhook**; job terpisah `Jenkinsfile.dependabot` untuk update dependency otomatis |
 | Deploy | server di belakang Cloudflare Tunnel → Nginx → PHP-FPM |
 | Bahasa | **Bahasa Indonesia** untuk dokumentasi & komentar |
 
@@ -69,6 +69,7 @@ Dependensi: `Core ← semua`; `Kelas ← Siswa, Guru, Raport`; `BankSoal ← Cat
 - **spatie/laravel-permission & laravel-data terpasang** — config + migrasi `create_permission_tables` sudah di-commit; **belum ada `PermissionSeeder`/role yang di-assign**.
 - **Reverb belum jalan** — broadcasting adalah scaffolding.
 - **Tidak ada route `/api/...`** — masih web-only (Inertia). API `/api/v1` adalah target.
+- **Dependabot GitHub di-nonaktifkan** — `.github/dependabot.yml` dihapus (hanya memantau `github-actions`). Penggantinya job Jenkins `Jenkinsfile.dependabot` (dependabot-core via Docker di `github.com`, ekosistem `composer` + `npm`), butuh Docker di agent + credential PAT `github-token`. Remote lokal memakai alias SSH `evelin-github.com` → `github.com`.
 - `User` model memakai `PasskeyAuthenticatable`, `TwoFactorAuthenticatable` (Fortify).
 - PWA aktif: `public/sw.js` + `manifest.json` + protocol handler `web+school://`.
 
