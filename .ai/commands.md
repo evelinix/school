@@ -28,7 +28,7 @@ bun run check               # vp lint + format + typecheck (lokal). ⚠️ crash
 bun run check:fix           # auto-fix lint/format
 bun run types:check         # tsc --noEmit (yang dipakai Jenkins)
 vendor/bin/pint --parallel --test     # cek format PHP
-vendor/bin/pint --dirty               # fix format file yang diubah (pre-commit hook)
+vendor/bin/pint --dirty               # fix format file yang diubah (dipakai pre-commit hook)
 vendor/bin/phpstan analyse            # static analysis (level 7)
 composer test               # gate lengkap: config:clear → pint --test → phpstan → artisan test
 ```

@@ -13,7 +13,7 @@ Backend Laravel 13.31 + PHP 8.4, SPA Inertia v3 + React 19 + Tailwind v4. **bun*
 6. **Jangan ubah file di luar scope**; **jangan hapus file** tanpa instruksi eksplisit.
 7. **Migrasi tidak diedit setelah di-commit** — buat migrasi baru.
 8. Jika ragu → **berhenti dan tanyakan**, jangan berasumsi.
-9. **Plan sebelum eksekusi** — sebelum berkode, periksa `docs/current.md`; bila ada pindahkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru di `docs/current.md`, dan tunggu persetujuan (detail: `.ai/workflow.md` §0).
+9. **Plan sebelum eksekusi** — sebelum berkode, periksa `docs/current.md`; bila ada pindahkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru di `docs/current.md`, dan tunggu persetujuan (detail: `.ai/workflow.md` §0). Tugas kecil (beberapa baris, kosmetik) boleh pakai **mini-plan** tanpa menunggu approval penuh.
 
 Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada di `.ai/` (daftar di bawah).
 
@@ -36,7 +36,7 @@ Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada d
 - `bun run check` / `check:fix` = vp lint + format + typecheck dengan `denyWarnings: true`. **Lewati di headless/CI**: dikenal crash dengan DataCloneError di sana, jadi Jenkins hanya menjalankan `types:check`. Lokal, `bun run check` adalah pintu masuk JS.
 - Gate PHP/JS lengkap: `composer test` (menjalankan `config:clear` → pint `--test` → phpstan level 7 → `php artisan test`). Run fokus lebih cepat: `composer lint:check` (pint) dan `composer types:check` (phpstan).
 - Test: `vendor/bin/pest <path>` atau `php artisan test --compact [--filter=...]`. CI berjalan paralel (`--parallel`, paratest). Test memakai sqlite `:memory:` — tanpa DB, tanpa service.
-- Hook Husky: pre-commit menjalankan `vendor/bin/pint --dirty`; pre-push menjalankan seluruh test suite. Setelah mengedit PHP apa pun jalankan `vendor/bin/pint --dirty` sebelum commit.
+- Hook Husky: pre-commit menjalankan `vendor/bin/pint --dirty` lalu `bun run types:check`; pre-push menjalankan `composer test` lalu `bun run types:check` (gate PHP penuh + gate JS versi CI). Setelah mengedit PHP apa pun jalankan `vendor/bin/pint --dirty` sebelum commit.
 - Jika aset 404 di browser (`ViteException: Unable to locate file`), jalankan `bun run build` (atau `bun run dev`).
 
 ## Architecture

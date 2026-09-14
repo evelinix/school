@@ -1,1 +1,2 @@
-php artisan test --compact
+composer test
+bun run types:check
