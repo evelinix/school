@@ -27,6 +27,5 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-docs/*
 .kiro/*
 public/php_check.php

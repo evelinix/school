@@ -1,3 +1,67 @@
+# School Platform — repo-specific
+
+Backend Laravel 13.31 + PHP 8.4, SPA Inertia v3 + React 19 + Tailwind v4. **bun** adalah package manager JS; lapisan build/lint frontend memakai **vite-plus** (biner `vp`) di atas Vite 8, bukan vite mentah. DB dev lokal menggunakan PostgreSQL; test berjalan di SQLite `:memory:` (override di phpunit.xml).
+
+> **Bahasa:** dokumentasi, komentar/docblock kode, dan commit message memakai **Bahasa Indonesia** (CalVer changelog juga). Ikuti `.ai/coding-standards.md`.
+
+## Aturan Emas (ringkas — detail di `.ai/`)
+1. **Explicit over Magic** — tidak ada facade/konvensi implisit yang tidak jelas.
+2. **Security First** — validasi input, otorisasi eksplisit (permission, bukan role), hindari `request()->all()` tanpa validasi.
+3. **Maintainability** — kode mudah dibaca 6 bulan kemudian; satu tanggung jawab per class.
+4. **Production Ready** — kode tidak memuat `dd()`, `dump()`, `var_dump()`, `console.log()`, atau TODO tanpa tiket.
+5. **Testable** — setiap service/action minimal happy path + 1 edge case.
+6. **Jangan ubah file di luar scope**; **jangan hapus file** tanpa instruksi eksplisit.
+7. **Migrasi tidak diedit setelah di-commit** — buat migrasi baru.
+8. Jika ragu → **berhenti dan tanyakan**, jangan berasumsi.
+
+Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada di `.ai/` (daftar di bawah).
+
+## AI Helpers (folder `.ai/`)
+
+`AGENTS.md` = entry point; `.ai/` = konteks granular. Baca sesuai tugas:
+- `.ai/context.md` — stack aktual, status modul/permission/reverb, role
+- `.ai/architecture.md` — layer module, arah dependensi, tenant scoping (target modular monolith)
+- `.ai/coding-standards.md` — standar PHP/TS/DB/Git + naming + Bahasa Indonesia
+- `.ai/module-template.md` — cara buat modul (`module:make` + fondasi `Modules/`)
+- `.ai/patterns.md` & `.ai/anti-patterns.md` — pola yang dipakai / dihindari
+- `.ai/testing.md` — strategi & contoh Pest
+- `.ai/workflow.md` & `.ai/commands.md` — alur kerja + cheatsheet CLI yang sah
+- `.ai/api-contract.md`, `.ai/security.md`, `.ai/database.md`, `.ai/decisions.md`, `.ai/changelog-rule.md`, `.ai/glossary.md`
+- `.ai/checklist/*` — new-module, new-endpoint, new-migration, pull-request
+- `.ai/rules/index.md` — peta glob → file aturan (dipakai workflow Boost saat membuat/mengedit file)
+
+## Commands — yang paling sering dipakai
+- Dev server: `bun run dev` · Build: `bun run build` · Typecheck: `bun run types:check` (`tsc --noEmit`)
+- `bun run check` / `check:fix` = vp lint + format + typecheck dengan `denyWarnings: true`. **Lewati di headless/CI**: dikenal crash dengan DataCloneError di sana, jadi Jenkins hanya menjalankan `types:check`. Lokal, `bun run check` adalah pintu masuk JS.
+- Gate PHP/JS lengkap: `composer test` (menjalankan `config:clear` → pint `--test` → phpstan level 7 → `php artisan test`). Run fokus lebih cepat: `composer lint:check` (pint) dan `composer types:check` (phpstan).
+- Test: `vendor/bin/pest <path>` atau `php artisan test --compact [--filter=...]`. CI berjalan paralel (`--parallel`, paratest). Test memakai sqlite `:memory:` — tanpa DB, tanpa service.
+- Hook Husky: pre-commit menjalankan `vendor/bin/pint --dirty`; pre-push menjalankan seluruh test suite. Setelah mengedit PHP apa pun jalankan `vendor/bin/pint --dirty` sebelum commit.
+- Jika aset 404 di browser (`ViteException: Unable to locate file`), jalankan `bun run build` (atau `bun run dev`).
+
+## Architecture
+- Auth adalah **Fortify**: login/register/password reset/email verification/2FA-TOTP/passkeys (WebAuthn) semua aktif di `config/fortify.php`. Model User memakai `PasskeyAuthenticatable` + `TwoFactorAuthenticatable`; registrasi lewat `app/Actions/Fortify/CreateNewUser`. Route settings sensitif memakai `RequirePassword` dan/atau `throttle:6,1` (lihat `routes/settings.php`) — tiru pola itu untuk route sensitif baru.
+- **Sistem modul baru di-setup, belum aktif**: `nwidart/laravel-modules` sudah dikonfigurasi (`config/modules.php`, `stubs/`, `vite-module-loader.js`) tapi belum ada direktori `Modules/` dan belum ada `modules_statuses.json`. spatie/laravel-permission dan spatie/laravel-data baru ditambahkan (config + migrasi `create_permission_tables` belum di-commit); belum ada role/permission yang di-assign. Jangan menganggap baiknya sebagai konvensi yang mapan.
+- Storage: disk `s3` menarget **RustFS**, server S3-kompatibel lokal di `docker-compose.yaml` (`127.0.0.1:9000`, path-style, `AWS_ENDPOINT`). `docker compose up -d mailpit rustfs` menyalakan mail + S3 lokal.
+- Broadcasting: Echo + Reverb sudah dikonfigurasi (`config/broadcasting.php`, `BROADCAST_CONNECTION=reverb`, `resources/js/app.tsx` → `configureEcho`) tapi **`laravel/reverb` belum diinstal** — realtime masih scaffolding, belum jalan.
+- Trust proxies sengaja `at: '*'` di `bootstrap/app.php` karena produksi di belakang Cloudflare Tunnel → nginx. Jangan "perbaiki".
+
+## Frontend conventions
+- React Compiler aktif (babel `reactCompilerPreset`) — jangan menambahkan `useMemo`/`useCallback`/`memo` secara manual.
+- Output Wayfinder (`resources/js/actions`, `routes`, `wayfinder`) **gitignored dan di-regenerate** — setelah mengubah route jalankan `php artisan wayfinder:generate`, import dari `@/actions` / `@/routes`. `formVariants: true` aktif, sehingga helper `.form()` tersedia.
+- `resources/js/components/ui/*` adalah komponen gaya-shadcn hasil generate, dikecualikan dari lint/format — jangan edit manual.
+- Layout halaman dipilih di `resources/js/app.tsx` (welcome → none, `auth/*` → AuthLayout, `settings/*` → AppLayout+SettingsLayout, selain itu → AppLayout).
+- Perangkap penamaan: `resources/js/hooks/use-permissions.ts` adalah hook **browser** Permissions API (notifikasi/kamera/mikrofon/geolokasi) — tidak terkait spatie/laravel-permission.
+- Komponen halaman memakai alias `@/`; pengurutan class tailwind ditangani `vp fmt` (`cn`, `clsx`, `cva`).
+- Model memakai gaya atribut Laravel 13: `#[Fillable([...])]` / `#[Hidden([...])]` pengganti `$fillable`/`$hidden` (lihat `app/Models/User.php`).
+
+## Repo conventions / ops
+- CI adalah **Jenkins**, bukan GitHub Actions (`Jenkinsfile`: PHP 8.4, Node 22, bun on PATH, linux-agent). Tidak ada workflow GitHub yang menjalankan build.
+- `.not_commit/` (material ops: kredensial, sertifikat, catatan server; gitignored lewat `.gitignore` berisi `*`) dan `.kiro/` tidak ikut commit. `docs/` berisi dokumen rancangan (master plan, struktur file) — jangan menaruh secret di sana; pastikan bebas-secret bila di-commit. Catatan rilis mengikuti `.ai/changelog-rule.md` saat menulis `CHANGELOG.md` (CalVer, Bahasa Indonesia). Jangan commit `.env` atau kredensial asli di dalamnya (Jenkins meregenerasi APP_KEY dari `.env.example`).
+- PWA: service worker `public/sw.js` + `manifest.json`; app juga mendaftarkan protocol handler `web+school://` — pertahankan di `app.tsx`.
+
+## Skills
+File skill ada di `.agents/skills/` (echo-react, fortify, inertia-react, wayfinder, tailwindcss, testing, laravel-best-practices). Aktifkan skill yang cocok sebelum bekerja di domain tersebut (auth → fortify-development, wiring route→frontend → wayfinder-development, halaman React → inertia-react-development).
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

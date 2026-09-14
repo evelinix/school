@@ -9,6 +9,22 @@ Legend: ✨ feat · 🐛 fix · ⚡ perf · ♻️ refactor · 📝 docs · 🔧
 
 ---
 
+## [2026.09.1] — 2026-09-14 · "CI & PWA" 🚀
+
+### ✨ Added
+- `feat: tambah Progressive Web App` — halaman bisa diinstal/offline via `manifest.json` + service worker `public/sw.js` (#—). <!-- TODO: nomor PR -->
+- `feat: tambah security headers` untuk respons HTTP (#—). <!-- TODO: nomor PR -->
+
+### 🐛 Fixed
+- `fix: perbaiki generasi APP_KEY di Jenkins` — dibuat langsung via PHP dengan nilai yang konsisten, menggantikan `artisan key:generate` yang tumpang tindih dengan pengaturan APP_KEY (#—). <!-- TODO: nomor PR -->
+
+### 🔧 Chore
+- `chore: migrasi CI ke Jenkins` (linux-agent, PHP 8.4 + Node 22) dengan trigger via GitHub webhook (#—). <!-- TODO: nomor PR -->
+- `chore: jadikan bun run types:check sebagai gate JS di CI` — `bun run check` dilewati karena crash headless (DataCloneError) (#—). <!-- TODO: nomor PR -->
+- `chore: tambah hook Husky` — pre-commit Pint, pre-push seluruh suite test (#—). <!-- TODO: nomor PR -->
+
+---
+
 ## [2026.09.0] — 2026-09-13 · "Pondasi" 🏗️
 
 ### ✨ Highlight
