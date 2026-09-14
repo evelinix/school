@@ -2,6 +2,12 @@
 //
 // TERPISAH dari Jenkinsfile (CI per-push). Tidak terpicu githubPush().
 //
+// Properties diatur VIA KONFIGURASI JOB (bukan triggers{} di sini):
+//   - Jadwal cron (mis. `H 6 * * 1`) dipasang di job config (TimerTrigger),
+//     karena triggers{} deklaratif + tanpa PipelineTriggersJobProperty
+//       memicu NPE getTriggers di pipeline-model-definition.
+// RE-APLIKASI (setelah job dibuat): pastikan job config memiliki
+//   `<hudson.triggers.TimerTrigger><spec>H 6 * * 1</spec></hudson.triggers.TimerTrigger>`.
 // Setup manual di Jenkins (sekali):
 //   1. Buat job "school-dependabot" tipe Pipeline (bukan Multibranch),
 //      "Pipeline script from SCM" → script path: Jenkinsfile.dependabot,
@@ -27,10 +33,6 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: '5'))
         timeout(time: 60, unit: 'MINUTES')
-    }
-
-    triggers {
-        cron('H 6 * * 1')
     }
 
     parameters {
