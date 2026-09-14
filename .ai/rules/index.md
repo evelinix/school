@@ -26,6 +26,9 @@ Untuk path di luar tabel di atas, baca file konteks pada baris yang cocok dengan
 | `tests/**`, `vitest` | .ai/testing.md |
 | `app/**` (Controller, Model, Service) | .ai/architecture.md, .ai/patterns.md, .ai/anti-patterns.md |
 | `docs/api/**`, route API | .ai/api-contract.md |
+| `.ai/kernel-core.md`, `app/Services/`, `app/Contracts/` | .ai/kernel-core.md |
+| `.ai/module-lifecycle.md`, `Modules/**/module.json` | .ai/module-lifecycle.md |
+| `.ai/checklist/new-kernel-service.md` | .ai/checklist/new-kernel-service.md |
 | (semua) | .ai/context.md, .ai/decisions.md |
 
 ## Cara Pakai

@@ -2,12 +2,18 @@
 
 > Semua command di sini sudah diverifikasi terhadap repo. **JS package manager = bun** (bukan npm), **build/lint = vite-plus** (`vp`), bukan vite mentah.
 
-## Dependency & Boot
+## Setup Awal
 
 ```bash
-bun install                 # JS deps (lockfile: bun.lock; CI pakai --frozen-lockfile)
-composer install            # PHP deps
-composer setup              # salin .env + key:generate + migrate + bun install + bun run build
+# Clone & setup
+git clone <repo> school-platform
+cd school-platform
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+bun install
+bun run build
 ```
 
 ## Development Harian
@@ -20,6 +26,49 @@ docker compose up -d mailpit rustfs   # mail + S3 lokal (RustFS 127.0.0.1:9000) 
 ```
 
 > **PostgreSQL dev TIDAK tersedia di docker-compose** (hanya mailpit + rustfs). DB dev adalah Postgres eksternal (`DB_CONNECTION=pgsql`, lihat `.env`). Pastikan service PG jalan sebelum `php artisan migrate` / `serve`.
+
+## Kernel Core — Perintah Umum
+
+```bash
+# Migrasi kernel
+php artisan migrate
+
+# Seed data kernel
+php artisan db:seed
+
+# Cek kesehatan sistem
+php artisan school:module:health
+
+# Cek route
+php artisan route:list
+```
+
+## Modul Fitur — Lifecycle
+
+```bash
+# Deteksi modul baru
+php artisan school:module:discover
+
+# Daftar modul
+php artisan school:module:list
+
+# Install modul (registrasi + migrasi)
+php artisan school:module:install siswa
+
+# Enable
+php artisan school:module:enable siswa
+
+# Disable (tanpa hapus data)
+php artisan school:module:disable siswa
+
+# Uninstall (production wajib --purge)
+php artisan school:module:uninstall siswa --purge
+
+# Buat modul baru
+php artisan module:make NamaModul
+```
+
+> `Modules/` + `modules_statuses.json` belum ada — modul pertama menyiapkannya.
 
 ## Quality Gate
 
@@ -41,35 +90,11 @@ composer test               # gate lengkap: config:clear → pint --test → php
 vendor/bin/pest <path>                       # file spesifik
 php artisan test --compact --filter=Name     # filter
 php artisan test --compact --parallel        # paralel (paratest, seperti CI)
+
+# Architecture test
+php artisan test --filter=CoreBoundaryTest
+php artisan test --filter=ModuleBoundaryTest
 ```
-
-E2E (Playwright) — belum terpasang; baru aktif setelah `bun add -D @playwright/test`:
-
-```bash
-bunx playwright test        # jalankan E2E
-bunx playwright install     # install browser
-```
-
-## Modul (nwidart/laravel-modules)
-
-```bash
-php artisan module:make NamaModul
-php artisan module:list
-php artisan module:enable NamaModul     # menulis modules_statuses.json
-php artisan module:disable NamaModul
-php artisan module:delete NamaModul
-```
-
-> `Modules/` + `modules_statuses.json` belum ada — modul pertama menyiapkannya.
-
-## Routes & Types (Wayfinder)
-
-```bash
-php artisan route:list
-php artisan wayfinder:generate          # tulis ulang resources/js/{actions,routes,wayfinder}
-```
-
-Hasilnya gitignored; commit HANYA jika ada perubahan source route.
 
 ## Database
 
@@ -83,12 +108,31 @@ php artisan db:seed --class=PermissionSeeder
 
 - Lokal: PostgreSQL `school_platform` — **eksternal, bukan container** (lihat catatan docker compose di atas). Tests: SQLite `:memory:` (phpunit.xml).
 
+## Routes & Types (Wayfinder)
+
+```bash
+php artisan route:list
+php artisan wayfinder:generate          # tulis ulang resources/js/{actions,routes,wayfinder}
+```
+
+Hasilnya gitignored; commit HANYA jika ada perubahan source route.
+
 ## Cache & Optimization
 
 ```bash
 php artisan optimize
 php artisan optimize:clear
 php artisan config:clear     # dijalankan otomatis oleh composer test
+php artisan route:cache
+php artisan event:cache
+php artisan view:cache
+```
+
+## Reverb
+
+```bash
+php artisan reverb:start   # websocket server (Reverb v1.11 terinstal)
+php artisan reverb:restart
 ```
 
 ## Debug & Insight
@@ -96,7 +140,11 @@ php artisan config:clear     # dijalankan otomatis oleh composer test
 ```bash
 php artisan about
 php artisan route:list --path=settings
+php artisan route:list --path=api/v1
+php artisan route:list --path=app
 php artisan event:list
+php artisan queue:failed
+php artisan queue:retry all
 php artisan pail                    # log streaming
 php artisan tinker --execute 'User::count();'
 ```
@@ -106,10 +154,4 @@ php artisan tinker --execute 'User::count();'
 ```bash
 bun run types:check        # typecheck saja
 bun run build              # build + manifest; jalankan bila ViteException di browser
-```
-
-## Realtime (belum jalan — scaffolding)
-
-```bash
-php artisan reverb:start   # HANYA setelah composer require laravel/reverb
 ```

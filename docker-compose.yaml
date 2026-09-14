@@ -87,7 +87,32 @@ services:
         aws --endpoint-url=http://rustfs:9000 s3api put-bucket-encryption --bucket $$S3_BUCKET --server-side-encryption-configuration '{\"Rules\":[{\"ApplyServerSideEncryptionByDefault\":{\"SSEAlgorithm\":\"AES256\"}}]}';
         echo 'Done.';
       "
+  # ===========================================================================
+  # MEILISEARCH
+  # ===========================================================================
 
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: school_meilisearch
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEILI_PORT:-7700}:7700"
+    env_file:
+      - .env
+    volumes:
+      - meili_data:/meili_data
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
+      MEILI_ENV: ${MEILI_ENV:-production}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MAX_INDEXING_MEMORY: "512 Mb"
+      MEILI_HTTP_PAYLOAD_SIZE_LIMIT: "100 Mb"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 volumes:
   mailpit_data:
@@ -98,3 +123,5 @@ volumes:
     name: rustfs_data
   rustfs_logs:
     name: rustfs_logs
+  meili_data:
+    name: meili_data

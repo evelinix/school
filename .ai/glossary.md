@@ -30,15 +30,28 @@
 | **Proctoring** | Pengawasan ujian |
 | **Correlation ID** | ID pelacak satu request lintas service |
 | **Tenant** | Sekolah (konteks multi-school) |
-| **Module** | Modul fitur (Siswa, Raport, dll) |
-| **Manifest** | File `module.json` yang menjelaskan modul |
-| **Registry** | Status modul (`modules_statuses.json`) |
 | **Passkey** | Kredensial WebAuthn pengganti password |
 | **Two-Factor (2FA)** | Verifikasi dua langkah, TOTP di Fortify |
 | **docs/current.md** | Plan tugas yang sedang berjalan — wajib disetujui sebelum dikerjakan (Aturan Emas #9) |
 | **docs/done/** | Arsip plan tugas selesai (`done/{nomor_nama_tugas}.md`) |
 | **Mini-plan** | Plan ringkas untuk tugas kecil (tanpa menunggu approval penuh — `.ai/workflow.md` §0) |
 | **vp** | Biner `vite-plus` untuk build/lint/check frontend |
+
+## Istilah Arsitektur
+
+| Istilah | Definisi |
+|---------|----------|
+| **Kernel Core** | Fondasi aplikasi yang melebur ke struktur Laravel (`app/`, `database/`, `routes/`, `config/`). Selalu aktif. |
+| **Modul Fitur** | Add-on di `Modules/` dengan siklus hidup install/enable/disable/uninstall. |
+| **Boundary** | Batas arsitektur yang dijaga oleh Architecture Test. |
+| **Lifecycle** | Siklus hidup modul: discovered → installed → enabled → disabled → uninstalled. |
+| **Module Manager** | Service kernel (`App\Services\ModuleManager`) yang mengelola lifecycle modul fitur. |
+| **Manifest** | File `module.json` di root setiap modul fitur. |
+| **Registry** | Tabel `modules` di database yang mencatat status modul fitur. |
+| **Ensure Module Enabled** | Middleware kernel yang memblokir request bila modul non-aktif. |
+| **CoreBoundaryTest** | Architecture test yang memastikan Kernel tidak mengimpor modul. |
+| **ModuleBoundaryTest** | Architecture test yang mencegah modul saling mengimpor langsung. |
+| **Purge** | Flag `--purge` pada uninstall yang menghapus file modul dari disk. |
 
 ---
 

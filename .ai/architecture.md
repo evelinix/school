@@ -1,99 +1,166 @@
 # Arsitektur
 
-> Target arsitektur adalah **Modular Monolith**. Saat ini repo masih monolit Laravel standar tanpa `Modules/` — pakai dokumen ini sebagai arah, bukan sebagai deskripsi kondisi kode saat ini.
-
-## Peta Layer per Modul
-
-Setiap modul memiliki **4 layer** yang wajib dipatuhi:
+## Peta Dua Kategori Kode
 
 ```
-┌─────────────────────────────────────────────┐
-│  Http (Presentation)                        │
-│  Controller Web (Inertia) & API (JSON)      │
-│  Request, Resource, Middleware              │
-├─────────────────────────────────────────────┤
-│  Application                                │
-│  Service, Action, DTO                       │
-│  Orkestrasi use-case, transaksi             │
-├─────────────────────────────────────────────┤
-│  Domain                                     │
-│  Model, Enum, Event, Exception, Contract    │
-│  Aturan bisnis murni                        │
-├─────────────────────────────────────────────┤
-│  Infrastructure                             │
-│  Repository, Provider, Storage              │
-│  Detail implementasi teknis                 │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                  KERNEL CORE (selalu aktif)              │
+│                                                          │
+│  app/Models/         app/Services/                       │
+│  app/Contracts/      app/Repositories/                   │
+│  app/Enums/          app/Events/                         │
+│  app/Actions/        app/DTO/                            │
+│  app/Http/           app/Console/Commands/               │
+│  app/Providers/                                          │
+│                                                          │
+│  database/           routes/         config/             │
+│                                                          │
+│  → namespace: App\                                       │
+│  → TIDAK punya lifecycle                                 │
+│  → TIDAK BOLEH impor Modules\*                           │
+└────────────────────┬─────────────────────────────────────┘
+                     │  Modul bergantung pada Core
+                     ▼
+┌──────────────────────────────────────────────────────────┐
+│            MODUL FITUR (add-on, punya lifecycle)         │
+│                                                          │
+│  Modules/Website/     Modules/Siswa/                     │
+│  Modules/Guru/        Modules/Kelas/                     │
+│  Modules/Raport/      Modules/Perpustakaan/              │
+│  Modules/BankSoal/    Modules/Cat/                       │
+│                                                          │
+│  → namespace: Modules\{Nama}\                            │
+│  → lifecycle: discover/install/enable/disable/uninstall  │
+│  → BOLEH impor App\*                                     │
+│  → TIDAK BOLEH impor modul lain langsung                 │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Arah Dependensi
 
 ```
-Http → Application → Domain ← Infrastructure
+Modul Fitur ──(boleh impor)──▶ Kernel Core
+Modul Fitur ──(event bus)──▶  Modul Fitur lain
+Kernel Core ──(DILARANG)──▶   Modul Fitur
 ```
 
-- **Domain** tidak boleh tahu tentang Http/Infrastructure.
-- **Application** hanya bergantung pada Domain.
-- **Infrastructure** mengimplementasikan kontrak (interface) Domain.
-- **Http** memanggil Application, tidak langsung ke Domain/Repository.
+## Layer di Dalam Modul
 
-## Struktur Direktori Modul
+Setiap modul memiliki 4 layer:
 
 ```
-Modules/NamaModul/
-├── app/
-│   ├── Domain/          # Models, Enums, Events, Exceptions, Contracts
-│   ├── Application/     # Actions (invokable), DTO (Spatie Data), Services
-│   ├── Infrastructure/  # Persistence/ (Eloquent repository), Providers/
-│   └── Http/            # Controllers/Web, Controllers/Api, Requests, Resources
-├── database/            # migrations/, factories/, seeders/
-├── routes/              # web.php, api.php, channels.php
-├── tests/               # Unit/, Feature/
-└── module.json
+┌─────────────────────────────────────┐
+│  Http (Presentation)                │
+│  Controller Web (Inertia) & API     │
+├─────────────────────────────────────┤
+│  Application                        │
+│  Service, Action, DTO               │
+├─────────────────────────────────────┤
+│  Domain                             │
+│  Model, Enum, Event, Contract       │
+├─────────────────────────────────────┤
+│  Infrastructure                     │
+│  Repository, Provider               │
+└─────────────────────────────────────┘
 ```
 
-## Komunikasi Antar Modul
+**Arah dependensi di dalam modul:** `Http → Application → Domain ← Infrastructure`
 
-**WAJIB** via **Domain Event**, bukan panggil service langsung antar modul:
+## Kernel Core di Struktur Laravel
+
+Kernel Core **tidak** punya folder khusus. Ia memakai konvensi Laravel:
+
+| Layer | Lokasi |
+|-------|--------|
+| Domain (model) | `app/Models/` |
+| Domain (enum) | `app/Enums/` |
+| Domain (event) | `app/Events/` |
+| Domain (contract) | `app/Contracts/` |
+| Domain (exception) | `app/Exceptions/` |
+| Application (service) | `app/Services/` |
+| Application (action) | `app/Actions/` |
+| Application (DTO) | `app/DTO/` |
+| Infrastructure (repository) | `app/Repositories/` |
+| Infrastructure (provider) | `app/Providers/` |
+| Presentation (HTTP) | `app/Http/` |
+| Presentation (console) | `app/Console/Commands/` |
+
+## Batas Dijaga oleh Architecture Test
+
+- `tests/Architecture/CoreBoundaryTest.php` — Kernel tidak impor modul
+- `tests/Architecture/ModuleBoundaryTest.php` — Modul tidak impor modul lain tanpa izin
+
+## Contoh Alur Request Web (Inertia)
 
 ```
-Modul A ── dispatch(EventA) ──▶ Event Bus
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              ▼                     ▼                     ▼
-       Listener Modul B      Listener Modul C      Listener Modul D
+HTTP Request
+    │
+    ▼
+routes/web.php
+    │
+    ▼
+Middleware: auth, school.context, module.enabled:siswa
+    │
+    ▼
+Modules\Siswa\Http\Controllers\Web\StudentWebController
+    │
+    ▼
+Modules\Siswa\Application\Services\StudentService
+    │  (memakai App\Services\SchoolContextService, App\Services\AuditService)
+    ▼
+Modules\Siswa\Infrastructure\Persistence\EloquentStudentRepository
+    │
+    ▼
+PostgreSQL
 ```
 
-Debug with `php artisan event:list`.
-
-## Alur Request (target)
+## Contoh Alur Request API (Flutter)
 
 ```
-HTTP → Route → Middleware (auth, school.context) → Controller → Form Request → DTO → Service (transaksi) → Action → Repository → Model → PostgreSQL
+HTTP Request
+    │
+    ▼
+routes/api.php  (prefix: /api/v1)
+    │
+    ▼
+Middleware: auth:sanctum, school.context, throttle, module.enabled:siswa
+    │
+    ▼
+Modules\Siswa\Http\Controllers\Api\StudentApiController
+    │
+    ▼
+Modules\Siswa\Application\Services\StudentService  (SAMA dengan web)
+    │
+    ▼
+Modules\Siswa\Http\Resources\StudentResource
+    │
+    ▼
+JSON Response
 ```
 
-## Tenant Context (multi-school)
+## Tenant Context
 
-Semua query data bisnis **WAJIB** terfilter `school_id`:
+Semua query data bisnis **WAJIB** terfilter oleh `school_id`:
 
 ```php
 // ✅ BENAR
-Student::query()->where('school_id', $context->requireId())->get();
+Student::query()->where('school_id', $schoolContext->requireId())->get();
 
-// ❌ SALAH — bocor lintas sekolah
-Student::query()->get();
+// ❌ SALAH
+Student::query()->get(); // bocor lintas sekolah
 ```
 
 Prioritaskan **global scope** (`scopeForSchool()`) di model bila pola sudah mapan.
 
-## Arsitektur Saat Ini (fakta repo)
+## Realtime (Reverb)
 
-- `app/` masih struktur default: `Models/`, `Http/Controllers/Settings/`, `Actions/Fortify/`, `Concerns/`, `Providers/`.
-- Konfigurasi middleware & exception di `bootstrap/app.php` — jangan ubah tanpa instruksi.
-- `trustProxies(at: '*')` **disengaja** (Cloudflare Tunnel → Nginx); jangan "perbaiki".
-- Realtime: channel rencana `private-school.{id}`, `private-class.{id}`, `private-exam.{id}`, `private-user.{id}` (belum aktif).
+Channel:
+- `private-school.{schoolId}`
+- `private-class.{classId}`
+- `private-exam.{examId}`
+- `private-user.{userId}`
 
-## Queue (target)
+## Queue Prioritas
 
 ```
 high          → notifikasi kritis, OTP

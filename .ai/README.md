@@ -1,37 +1,42 @@
 # Folder `.ai/` — Konteks untuk AI Coding Agent
 
-Folder ini berisi konteks granular yang dibaca oleh AI agent saat bekerja pada proyek **School Platform Enterprise**.
+Folder ini berisi konteks granular yang dibaca oleh AI agent
+(Claude Code, Cursor, Windsurf, Aider, dsb) saat bekerja pada proyek
+**School Platform Enterprise**.
 
-## Cara Pakai
+## Peta Baca Cepat
 
-AI agent membaca `AGENTS.md` di root terlebih dahulu, lalu masuk ke folder ini untuk konteks spesifik. Urutan pembacaan yang dianjurkan:
+| Tugas | File yang dibaca |
+|-------|------------------|
+| Kerja di Kernel Core | `kernel-core.md`, `architecture.md`, `coding-standards.md` |
+| Buat modul baru | `module-template.md`, `module-lifecycle.md`, `checklist/new-module.md` |
+| Modifikasi modul fitur | `architecture.md`, `patterns.md`, `module-lifecycle.md` |
+| Tambah endpoint | `api-contract.md`, `checklist/new-endpoint.md` |
+| Tambah service kernel | `kernel-core.md`, `checklist/new-kernel-service.md` |
+| Menulis test | `testing.md` |
+| Tambah migrasi | `database.md`, `checklist/new-migration.md` |
+| Sebelum PR | `checklist/pull-request.md` |
 
-0. **Plan sebelum berkode** — periksa `docs/current.md`; bila ada, arsipkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru, tunggu persetujuan (`.ai/workflow.md` §0). Tugas kecil cukup **mini-plan** tanpa menunggu approval penuh.
-1. `context.md` — identitas & stack proyek
-2. `architecture.md` — arsitektur & aturan layer
-3. `coding-standards.md` — standar penulisan kode
-4. File spesifik sesuai tugas (mis. `testing.md` bila menulis test, `module-template.md` bila membuat modul)
+## Konvensi
 
-## Konvensi Penulisan
-
-- **Bahasa Indonesia** untuk seluruh konten, komentar, docblock, dan commit message.
-- Format Markdown dengan heading `##` dan `###`.
-- Contoh kode wajib disertai komentar penjelas.
-- Setiap file diawali ringkasan singkat.
-- **Status/stack di `.ai/context.md` wajib disinkronkan di commit yang sama** dengan perubahan yang menyentuhnya (lihat `.ai/workflow.md`).
+- Bahasa Indonesia untuk seluruh konten.
+- Format Markdown.
+- Setiap file diawali ringkasan 1 paragraf.
 
 ## Batasan
 
-- Folder ini **tidak boleh** dipakai untuk menyimpan secret / credential.
-- Jangan menaruh kode yang dieksekusi (`*.php`, `*.ts`) di sini — hanya Markdown.
-- Perubahan pada folder ini harus disetujui Tech Lead.
+- Tidak ada secret di folder ini.
+- Tidak ada kode yang dieksekusi.
+- Perubahan harus disetujui Tech Lead.
 
 ## Indeks File
 
 | File | Isi |
 |------|-----|
 | `context.md` | Konteks proyek, stack, role, modul |
-| `architecture.md` | Arsitektur modular + aturan dependensi |
+| `architecture.md` | Arsitektur dua kategori + aturan dependensi |
+| `kernel-core.md` | **Panduan Kernel Core** (melebur ke Laravel) |
+| `module-lifecycle.md` | **Siklus hidup modul fitur** |
 | `coding-standards.md` | Standar kode PHP / TS / DB / Git |
 | `module-template.md` | Template pembuatan modul baru |
 | `patterns.md` | Pattern yang direkomendasikan |
@@ -44,5 +49,5 @@ AI agent membaca `AGENTS.md` di root terlebih dahulu, lalu masuk ke folder ini u
 | `database.md` | Konvensi database |
 | `decisions.md` | Keputusan arsitektur/kebijakan (ADR) |
 | `changelog-rule.md` | Aturan penulisan CHANGELOG oleh AI (CalVer) |
-| `glossary.md` | Daftar istilah domain |
+| `glossary.md` | Daftar istilah domain + arsitektur |
 | `checklist/*` | Checklist operasional |

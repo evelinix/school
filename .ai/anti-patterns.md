@@ -89,3 +89,81 @@ foreach (Student::with('class')->get() as $student) {
 ## 12. `dd()`/`dump()`/`console.log()` Tersisa
 
 Kode committed **tidak boleh** mengandung debug dump. Gunakan `Log::info(...)` atau tester.
+
+---
+
+## Kernel vs Modul — Anti-Pattern
+
+### 13. Kernel Mengimpor Modul
+
+❌ **SALAH**
+
+```php
+// di app/Services/SchoolService.php
+use Modules\Siswa\Domain\Models\Student;
+
+public function countStudents(string $schoolId): int
+{
+    return Student::query()->where('school_id', $schoolId)->count();
+}
+```
+
+✅ **BENAR** — Kernel menyediakan kontrak; modul yang menghitung.
+
+```php
+// di Modul Siswa
+use App\Services\SchoolContextService;
+
+public function countStudents(): int
+{
+    return Student::query()
+        ->where('school_id', $this->schoolContext->requireId())
+        ->count();
+}
+```
+
+### 14. Modul Mengimpor Modul Lain Langsung
+
+❌ **SALAH**
+
+```php
+// di Modul Raport
+use Modules\Siswa\Domain\Models\Student;
+```
+
+✅ **BENAR** — pakai Domain Event atau kontrak publik.
+
+```php
+// Di Modul Siswa: dispatch
+event(new StudentEnrolled($student));
+
+// Di Modul Raport: listener
+final class InitializeReportCard
+{
+    public function handle(StudentEnrolled $event): void { /* ... */ }
+}
+```
+
+### 15. Memindahkan Kode Kernel ke Modules
+
+❌ **SALAH** — membuat `Modules/Core/` atau `app/Core/`.
+
+✅ **BENAR** — Kernel tetap di `app/`, `database/`, `routes/`, `config/`.
+
+### 16. Menempatkan Fitur di Kernel
+
+❌ **SALAH** — menambah `app/Services/StudentService.php` untuk fitur siswa.
+
+✅ **BENAR** — letakkan di `Modules/Siswa/app/Application/Services/StudentService.php`.
+
+Kernel hanya untuk: User, School, Role, Permission, Module, Setting, Audit.
+
+### 17. Menambah Perintah Disable untuk Kernel
+
+❌ **SALAH**
+
+```bash
+php artisan school:module:disable core
+```
+
+✅ **BENAR** — Core tidak bisa di-disable. Tidak ada perintah seperti ini.

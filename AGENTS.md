@@ -4,6 +4,51 @@ Backend Laravel 13.31 + PHP 8.4, SPA Inertia v3 + React 19 + Tailwind v4. **bun*
 
 > **Bahasa:** dokumentasi, komentar/docblock kode, dan commit message memakai **Bahasa Indonesia** (CalVer changelog juga). Ikuti `.ai/coding-standards.md`.
 
+## Struktur Arsitektur — DUA KATEGORI KODE
+
+Aplikasi ini memiliki **DUA KATEGORI KODE** yang harus dibedakan secara tegas:
+
+### Kernel Core — "Melebur" di Struktur Laravel
+
+Kernel Core adalah fondasi aplikasi. Ia **selalu aktif**, tidak punya siklus install/enable/disable/uninstall. Ia hidup di **struktur default Laravel**, bukan di folder khusus.
+
+| Kategori | Lokasi |
+|----------|--------|
+| Model kernel | `app/Models/` (User, School, Module, Setting, AuditLog) |
+| Enum kernel | `app/Enums/` |
+| Event kernel | `app/Events/` |
+| Exception kernel | `app/Exceptions/` |
+| Kontrak kernel | `app/Contracts/` |
+| Service kernel | `app/Services/` |
+| Repository kernel | `app/Repositories/` |
+| Action kernel | `app/Actions/` |
+| DTO kernel | `app/DTO/` |
+| Controller kernel | `app/Http/Controllers/` (Auth, Dashboard, School, User, Role, Setting, Module) |
+| Middleware kernel | `app/Http/Middleware/` (ResolveSchoolContext, EnsureModuleEnabled, AssignCorrelationId, SecurityHeaders) |
+| Resource kernel | `app/Http/Resources/` |
+| Response helper | `app/Http/Responses/` |
+| Command kernel | `app/Console/Commands/Module*` |
+| Provider kernel | `app/Providers/CoreServiceProvider.php` |
+| Migrasi kernel | `database/migrations/` (users, schools, modules, settings, audit_logs, permission_tables) |
+| Seeder kernel | `database/seeders/` (School, Role, Permission, RolePermission, Admin) |
+| Config kernel | `config/core.php` |
+| Route kernel | `routes/web.php`, `routes/api.php`, `routes/channels.php` |
+
+**Aturan emas:** Kernel Core **TIDAK BOLEH** mengimpor namespace `Modules\*`. Ini dijaga oleh `tests/Architecture/CoreBoundaryTest.php`.
+
+### Modul Fitur — Add-on di `Modules/`
+
+Modul fitur adalah **add-on** yang bisa dipasang/dilepas. Mereka punya siklus hidup: `discovered → installed → enabled → disabled → uninstalled`.
+
+Daftar modul fitur: Website, Siswa, Guru, Kelas, Raport, Perpustakaan, BankSoal, Cat.
+
+**Aturan emas:**
+1. Modul **boleh** mengimpor `App\*` (Kernel Core).
+2. Modul **tidak boleh** mengimpor modul lain secara langsung; gunakan **Domain Event** untuk komunikasi antar modul.
+3. Setiap modul wajib punya `module.json` dengan `requires: { core: ^1.0 }`.
+
+Lihat `.ai/kernel-core.md` dan `.ai/module-lifecycle.md` untuk detail lengkap.
+
 ## Aturan Emas (ringkas — detail di `.ai/`)
 1. **Explicit over Magic** — tidak ada facade/konvensi implisit yang tidak jelas.
 2. **Security First** — validasi input, otorisasi eksplisit (permission, bukan role), hindari `request()->all()` tanpa validasi.
@@ -14,6 +59,8 @@ Backend Laravel 13.31 + PHP 8.4, SPA Inertia v3 + React 19 + Tailwind v4. **bun*
 7. **Migrasi tidak diedit setelah di-commit** — buat migrasi baru.
 8. Jika ragu → **berhenti dan tanyakan**, jangan berasumsi.
 9. **Plan sebelum eksekusi** — sebelum berkode, periksa `docs/current.md`; bila ada pindahkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru di `docs/current.md`, dan tunggu persetujuan (detail: `.ai/workflow.md` §0). Tugas kecil (beberapa baris, kosmetik) boleh pakai **mini-plan** tanpa menunggu approval penuh.
+10. **Role & Permission** menggunakan Bahasa Indonesia untuk resource domain **dan action** (mis. `siswa.siswa.lihat`, `raport.nilai.input`, `pengguna.pengguna.ubah`). Framework/package tetap berkata Inggris sesuai rujukannya.
+11. **Batas Kernel vs Modul** — kode Kernel Core tidak boleh mengimpor `Modules\*`; modul fitur boleh mengimpor `App\*`.
 
 Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada di `.ai/` (daftar di bawah).
 
@@ -24,11 +71,13 @@ Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada d
 - `.ai/architecture.md` — layer module, arah dependensi, tenant scoping (target modular monolith)
 - `.ai/coding-standards.md` — standar PHP/TS/DB/Git + naming + Bahasa Indonesia
 - `.ai/module-template.md` — cara buat modul (`module:make` + fondasi `Modules/`)
+- `.ai/kernel-core.md` — panduan Kernel Core (melebur ke Laravel)
+- `.ai/module-lifecycle.md` — panduan siklus hidup modul fitur
 - `.ai/patterns.md` & `.ai/anti-patterns.md` — pola yang dipakai / dihindari
 - `.ai/testing.md` — strategi & contoh Pest
 - `.ai/workflow.md` & `.ai/commands.md` — alur kerja + cheatsheet CLI yang sah
 - `.ai/api-contract.md`, `.ai/security.md`, `.ai/database.md`, `.ai/decisions.md`, `.ai/changelog-rule.md`, `.ai/glossary.md`
-- `.ai/checklist/*` — new-module, new-endpoint, new-migration, pull-request
+- `.ai/checklist/*` — new-module, new-kernel-service, new-endpoint, new-migration, pull-request
 - `.ai/rules/index.md` — peta glob → file aturan (dipakai workflow Boost saat membuat/mengedit file)
 
 ## Commands — yang paling sering dipakai
@@ -41,9 +90,9 @@ Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada d
 
 ## Architecture
 - Auth adalah **Fortify**: login/register/password reset/email verification/2FA-TOTP/passkeys (WebAuthn) semua aktif di `config/fortify.php`. Model User memakai `PasskeyAuthenticatable` + `TwoFactorAuthenticatable`; registrasi lewat `app/Actions/Fortify/CreateNewUser`. Route settings sensitif memakai `RequirePassword` dan/atau `throttle:6,1` (lihat `routes/settings.php`) — tiru pola itu untuk route sensitif baru.
-- **Sistem modul baru di-setup, belum aktif**: `nwidart/laravel-modules` sudah dikonfigurasi (`config/modules.php`, `stubs/`, `vite-module-loader.js` — sudah di-commit) tapi belum ada direktori `Modules/` dan belum ada `modules_statuses.json`. spatie/laravel-permission dan spatie/laravel-data juga sudah terpasang (config + migrasi `create_permission_tables` sudah di-commit); belum ada `PermissionSeeder`/role yang di-assign. Jangan menganggap baiknya sebagai konvensi yang mapan.
+- **Sistem modul di-setup, belum aktif sepenuhnya**: `nwidart/laravel-modules` sudah dikonfigurasi (`config/modules.php`, `stubs/`, `vite-module-loader.js` — sudah di-commit) tapi belum ada direktori `Modules/` dan belum ada `modules_statuses.json`. spatie/laravel-permission dan spatie/laravel-data juga sudah terpasang (config + migrasi `create_permission_tables` sudah di-commit); belum ada `PermissionSeeder`/role yang di-assign. Jangan menganggap baiknya sebagai konvensi yang mapan.
 - Storage: disk `s3` menarget **RustFS**, server S3-kompatibel lokal di `docker-compose.yaml` (`127.0.0.1:9000`, path-style, `AWS_ENDPOINT`). `docker compose up -d mailpit rustfs` menyalakan mail + S3 lokal.
-- Broadcasting: Echo + Reverb sudah dikonfigurasi (`config/broadcasting.php`, `BROADCAST_CONNECTION=reverb`, `resources/js/app.tsx` → `configureEcho`) tapi **`laravel/reverb` belum diinstal** — realtime masih scaffolding, belum jalan.
+- Broadcasting: Echo + Reverb harusnya sudah jalan — Reverb v1.11 terinstal (`composer require laravel/reverb`), Echo terkonfigurasi (`config/broadcasting.php`, `BROADCAST_CONNECTION=reverb`, `resources/js/app.tsx` → `configureEcho`).
 - Trust proxies sengaja `at: '*'` di `bootstrap/app.php` karena produksi di belakang Cloudflare Tunnel → nginx. Jangan "perbaiki".
 
 ## Frontend conventions

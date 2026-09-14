@@ -1,62 +1,70 @@
-# Checklist — Modul Baru
+# Checklist — Modul Fitur Baru
+
+## Perencanaan
+
+- [ ] Nama modul disetujui Tech Lead
+- [ ] Modul tidak duplikat dengan yang sudah ada
+- [ ] Dependency antar-modul sudah dipetakan
+- [ ] Permission sudah didefinisikan (format `modul.resource.action`)
 
 ## Struktur
 
-- [ ] `Modules/NamaModul/` dibuat via `php artisan module:make NamaModul`
-- [ ] `app/Domain/` lengkap (Models, Enums, Events, Exceptions, Contracts)
-- [ ] `app/Application/` lengkap (Actions, DTO, Services)
-- [ ] `app/Infrastructure/` lengkap (Persistence, Providers)
-- [ ] `app/Http/` lengkap (Controllers/Web, Controllers/Api, Requests, Resources)
-- [ ] `database/` (migrations, factories, seeders)
-- [ ] `routes/` (web.php, api.php) — dimuat via ServiceProvider
-- [ ] `tests/` (Unit, Feature)
-- [ ] `modules_statuses.json` ada & modul `active: 1` bila fondasi pertama kali
+- [ ] `php artisan module:make NamaModul` dijalankan
+- [ ] Folder `app/Domain/` lengkap (Models, Enums, Events, Exceptions, Contracts)
+- [ ] Folder `app/Application/` lengkap (Actions, DTO, Services)
+- [ ] Folder `app/Infrastructure/` lengkap (Persistence, Providers)
+- [ ] Folder `app/Http/` lengkap (Controllers/Web, Controllers/Api, Requests, Resources)
+- [ ] Folder `database/` (migrations, factories, seeders)
+- [ ] Folder `routes/` (web.php, api.php)
+- [ ] Folder `tests/` (Unit, Feature)
 
 ## Manifest
 
 - [ ] `module.json` diisi lengkap
 - [ ] `version` diset `1.0.0`
-- [ ] `requires` mencantumkan minimal `core`
-- [ ] `permissions` didaftarkan (nama `modul.bagian.aksi`)
+- [ ] `requires.core` minimal `^1.0`
+- [ ] `permissions` didaftarkan
 
 ## Kode
 
-- [ ] `declare(strict_types=1);`
-- [ ] Model pakai `HasUlids` (tabel bisnis baru)
+- [ ] Model pakai `HasUlids`
 - [ ] Model pakai `SoftDeletes` bila relevan
 - [ ] Migration pakai `foreignUlid` untuk `school_id`
-- [ ] Semua query bisnis terfilter `school_id`
-- [ ] Service pakai `DB::transaction()` untuk operasi multi-tabel
+- [ ] Service menggunakan `DB::transaction()` untuk operasi multi-tabel
+- [ ] Service menggunakan `SchoolContextService` untuk `school_id`
+- [ ] Service menggunakan `AuditService` untuk setiap mutasi
 - [ ] DTO pakai `readonly`
-- [ ] FormRequest validasi whitelist + `authorize()` permission
-- [ ] Controller Web mengembalikan Inertia response; Api → Resource
-- [ ] Komunikasi antar modul via Domain Event, bukan direct call
-- [ ] Docblock & komentar Bahasa Indonesia
+- [ ] FormRequest memvalidasi dengan whitelist
+- [ ] Controller Web mengembalikan Inertia Response
+- [ ] Controller Api mengembalikan `ApiResponse` atau Resource
+- [ ] Route web dilindungi `auth`, `school.context`, `module.enabled:{slug}`
+- [ ] Route api dilindungi `auth:sanctum`, `school.context`, `module.enabled:{slug}`
 
 ## Test
 
-- [ ] Unit test setiap Service method
-- [ ] Feature test setiap endpoint (Web & API)
-- [ ] Happy path + minimal 1 edge case
-- [ ] Test otorisasi (tanpa permission → 403)
-
-## Seeding & Otorisasi (spatie/laravel-permission)
-
-- [ ] `PermissionSeeder` deterministik — naming konsisten `modul.bagian.aksi` (mis. `core.role.index`), tanpa faker/random
-- [ ] Assignment Role↔Permission dilakukan di seeder, bukan manual/tinker
-- [ ] Verifikasi jalan tanpa error: `php artisan db:seed --class=PermissionSeeder`
-- [ ] Feature test otorisasi: dengan permission → sukses; tanpa → 403
-- [ ] Ralat klaim "belum ada role" di `.ai/context.md` di commit yang sama saat seeder pertama dirilis
+- [ ] Unit test untuk setiap Service method
+- [ ] Feature test untuk setiap endpoint (Web & API)
+- [ ] Test happy path + minimal 1 edge case
+- [ ] Test otorisasi (user tanpa permission → 403)
+- [ ] Test modul disabled → 404
 
 ## Dokumentasi
 
-- [ ] Update `docs/modules/{slug}.md`
-- [ ] Daftarkan permission di `PermissionSeeder`
-- [ ] Update `.ai/` bila ada perubahan arsitektur (sinkron garis status `.ai/context.md` — lihat `.ai/workflow.md` → "Menjaga `.ai/` Tetap Aktual")
+- [ ] `docs/modules/{slug}.md` dibuat
+- [ ] Permission didaftarkan di `PermissionSeeder`
+- [ ] Update `README.md` modul
 
-## Final Check
+## Verifikasi
 
-- [ ] `vendor/bin/pint --parallel --test` ✅
-- [ ] `vendor/bin/phpstan analyse` ✅
-- [ ] `bun run types:check` ✅
-- [ ] `php artisan test --compact` ✅
+```bash
+php artisan school:module:list
+php artisan school:module:discover
+php artisan school:module:install namamodul
+php artisan school:module:enable namamodul
+php artisan test --filter=NamaModul
+./vendor/bin/pint --test
+./vendor/bin/phpstan analyse
+```
+
+- [ ] Semua perintah di atas hijau
+- [ ] `tests/Architecture/ModuleBoundaryTest` hijau

@@ -1,30 +1,60 @@
 # Template Modul Baru
 
-> Status: `nwidart/laravel-modules` **sudah dikonfigurasi tetapi belum ada `Modules/`** — modul pertama perlu menyiapkan fondasi (lihat catatan akhir).
+Modul fitur hidup di `Modules/{Nama}/`. Setiap modul memiliki siklus
+hidup dan **wajib** mengikuti template ini.
 
 ## Langkah
 
 1. `php artisan module:make NamaModul`
 2. Rapikan folder sesuai struktur di `.ai/architecture.md`.
-3. Isi `module.json`.
-4. Buat migrasi, model, service, action, controller, route.
-5. Tambah test (Unit + Feature).
-6. Daftarkan permission di `PermissionSeeder` (spatie/laravel-permission).
-7. Update `docs/modules/{slug}.md` jika ada.
+3. Isi `module.json` dengan benar (lihat di bawah).
+4. Buat migrasi, model, service, controller, route.
+5. Tambah test.
+6. Daftarkan permission di `PermissionSeeder`.
+7. Update dokumentasi modul di `docs/modules/{slug}.md`.
+8. Jalankan `.ai/checklist/new-module.md`.
 
 ## Struktur Folder
 
 ```
 Modules/NamaModul/
 ├── app/
-│   ├── Domain/          # Models, Enums, Events, Exceptions, Contracts
-│   ├── Application/     # Actions/, DTO/, Services/
-│   ├── Infrastructure/  # Persistence/, Providers/
-│   └── Http/            # Controllers/Web, Controllers/Api, Requests, Resources
-├── database/            # migrations/, factories/, seeders/
-├── routes/              # web.php, api.php (load via ServiceProvider)
-├── tests/               # Unit/, Feature/
-└── module.json
+│   ├── Domain/
+│   │   ├── Models/
+│   │   ├── Enums/
+│   │   ├── Events/
+│   │   ├── Exceptions/
+│   │   └── Contracts/
+│   ├── Application/
+│   │   ├── Actions/
+│   │   ├── DTO/
+│   │   └── Services/
+│   ├── Infrastructure/
+│   │   ├── Persistence/
+│   │   └── Providers/
+│   └── Http/
+│       ├── Controllers/
+│       │   ├── Web/
+│       │   └── Api/
+│       ├── Requests/
+│       ├── Resources/
+│       └── Policies/
+├── database/
+│   ├── migrations/
+│   ├── factories/
+│   └── seeders/
+├── routes/
+│   ├── web.php
+│   └── api.php
+├── resources/
+│   ├── js/
+│   │   └── Pages/
+│   └── lang/
+├── tests/
+│   ├── Unit/
+│   └── Feature/
+├── module.json
+└── composer.json
 ```
 
 ## `module.json` Standar
@@ -43,14 +73,19 @@ Modules/NamaModul/
         "core": "^1.0"
     },
     "permissions": [
-        "namamodul.resource.view",
-        "namamodul.resource.create",
-        "namamodul.resource.update",
-        "namamodul.resource.delete"
+        "namamodul.resource.lihat",
+        "namamodul.resource.tambah",
+        "namamodul.resource.ubah",
+        "namamodul.resource.hapus"
     ],
     "active": 1
 }
 ```
+
+**Catatan penting:**
+- `requires.core` **wajib** ada sebagai penanda Kernel Core.
+- `requires` untuk modul lain hanya bila memang ada dependency.
+- `permissions` didaftarkan di sini DAN di `PermissionSeeder` Kernel Core.
 
 ## Service Provider Modul
 
@@ -79,8 +114,47 @@ final class NamaModulServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
         $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');
+        $this->loadRoutesFrom(__DIR__ . '/../../routes/api.php');
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'namamodul');
     }
 }
+```
+
+## Route Modul Wajib Dilindungi
+
+**`Modules/NamaModul/routes/web.php`**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+use Modules\NamaModul\Http\Controllers\Web\ResourceWebController;
+
+Route::middleware(['auth', 'school.context', 'module.enabled:namamodul'])
+    ->prefix('app/namamodul')
+    ->name('namamodul.')
+    ->group(function (): void {
+        Route::resource('resources', ResourceWebController::class);
+    });
+```
+
+**`Modules/NamaModul/routes/api.php`**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+use Modules\NamaModul\Http\Controllers\Api\ResourceApiController;
+
+Route::middleware(['auth:sanctum', 'school.context', 'module.enabled:namamodul'])
+    ->prefix('v1')
+    ->group(function (): void {
+        Route::apiResource('resources', ResourceApiController::class);
+    });
 ```
 
 ## Koneksi Vite untuk Modul
@@ -91,18 +165,7 @@ final class NamaModulServiceProvider extends ServiceProvider
   2. Pastikan `modules_statuses.json` di root ada — tanpa file ini loader **error saat dijalankan** (bukan warning). File ini **wajib di-commit ke VCS** (state modul aktif untuk semua dev) — jangan masuk `.gitignore`.
   3. Modul yang aktif menambahkan path asset lewat `vite.config.js` miliknya sendiri.
 - Tanpa langkah di atas, asset/halaman modul **tidak ikut ter-build** → frontend modul 404.
-- Baris loader harus terhubung di entry `resources/js` bila modul membawa asset sendiri.
 
 ## Checklist
 
 Lihat `.ai/checklist/new-module.md`.
-
-## Catatan Fondasi (modul pertama)
-
-Karena `Modules/` belum ada, menyiapkan modul pertama berarti sekaligus menyiapkan:
-
-1. Buat folder `Modules/` + `modules_statuses.json` (isi `{"NamaModul": true}`).
-2. Aktifkan koneksi Vite untuk modul (lihat bagian "Koneksi Vite untuk Modul" di atas) bila modul punya asset.
-3. Pastikan konfigurasi modules sudah sesuai (`config/modules.php` sudah ada).
-4. Pastikan `AppServiceProvider` meng-load `::class`/assets modul yang diperlukan (atau pakai ServiceProvider modul seperti di atas).
-5. Migrasi global yang sudah ada (**users, passkeys, permission_tables**) TIDAK dipindah ke modul tanpa instruksi.
