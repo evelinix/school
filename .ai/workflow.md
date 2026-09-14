@@ -10,6 +10,12 @@ Sebelum menulis/mengubah kode atau struktur apa pun:
 4. **Jangan mulai mengerjakan** sebelum `docs/current.md` disetujui pengguna/tech lead. Setelah disetujui, kerjakan sesuai plan dan centang checklist.
 5. Setelah selesai & diverifikasi: hapus/tandai checklist plan, lalu saat tugas berikutnya dimulai baris 1-3 terulang.
 
+### Tugas Kecil (mini-plan)
+
+- Perubahan kecil: ≤ beberapa baris, kosmetik/typo/teks semata, tidak mengubah struktur/arsitektur (mis. perbaikan kalimat guideline, rename file dokumen, satu command tweak).
+- Aturan: arsip plan lama di `docs/current.md` ke `docs/done/` TETAP wajib (baris 2 §0 berlaku untuk semua ukuran). Plan baru ditulis ringkas (3-5 baris: apa + di file mana + cek) dan **tidak perlu menunggu persetujuan penuh** — langsung kerjakan dan laporkan hasilnya.
+- Ragu kecil/besar → anggap **besar** (perlu persetujuan penuh).
+
 ## Siklus Harian
 
 0. Jalankan **Alur Mulai Tugas (§0)** — pastikan plan `docs/current.md` ada & disetujui (arsip ke `docs/done/` bila ada plan lama).

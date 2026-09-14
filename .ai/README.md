@@ -6,7 +6,7 @@ Folder ini berisi konteks granular yang dibaca oleh AI agent saat bekerja pada p
 
 AI agent membaca `AGENTS.md` di root terlebih dahulu, lalu masuk ke folder ini untuk konteks spesifik. Urutan pembacaan yang dianjurkan:
 
-0. **Plan sebelum berkode** — periksa `docs/current.md`; bila ada, arsipkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru, tunggu persetujuan (`.ai/workflow.md` §0).
+0. **Plan sebelum berkode** — periksa `docs/current.md`; bila ada, arsipkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru, tunggu persetujuan (`.ai/workflow.md` §0). Tugas kecil cukup **mini-plan** tanpa menunggu approval penuh.
 1. `context.md` — identitas & stack proyek
 2. `architecture.md` — arsitektur & aturan layer
 3. `coding-standards.md` — standar penulisan kode
