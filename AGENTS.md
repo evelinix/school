@@ -13,6 +13,7 @@ Backend Laravel 13.31 + PHP 8.4, SPA Inertia v3 + React 19 + Tailwind v4. **bun*
 6. **Jangan ubah file di luar scope**; **jangan hapus file** tanpa instruksi eksplisit.
 7. **Migrasi tidak diedit setelah di-commit** — buat migrasi baru.
 8. Jika ragu → **berhenti dan tanyakan**, jangan berasumsi.
+9. **Plan sebelum eksekusi** — sebelum berkode, periksa `docs/current.md`; bila ada pindahkan ke `docs/done/{nomor_nama_tugas}.md`, buat plan baru di `docs/current.md`, dan tunggu persetujuan (detail: `.ai/workflow.md` §0).
 
 Detail arsitektur, pattern, anti-pattern, testing, dan konvensi DB lengkap ada di `.ai/` (daftar di bawah).
 

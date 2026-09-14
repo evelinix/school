@@ -1,10 +1,21 @@
 # Alur Kerja Development
 
+## 0. Alur Mulai Tugas (wajib sebelum berkode)
+
+Sebelum menulis/mengubah kode atau struktur apa pun:
+
+1. Periksa apakah `docs/current.md` ada (plan tugas yang sedang berjalan / baru selesai).
+2. Bila **ada**: pindahkan (rename) ke `docs/done/{nomor_nama_tugas}.md` — awali nomor urut tugas, mis. `docs/done/01_sinkronisasi-ai-guidelines.md`. File itu menjadi **arsip plan** tugas tersebut.
+3. Buat plan baru di `docs/current.md` — struktur: konteks, daftar tugas (apa + di file mana), target, checklist, catatan eksekusi. Contoh lihat arsip di `docs/done/`.
+4. **Jangan mulai mengerjakan** sebelum `docs/current.md` disetujui pengguna/tech lead. Setelah disetujui, kerjakan sesuai plan dan centang checklist.
+5. Setelah selesai & diverifikasi: hapus/tandai checklist plan, lalu saat tugas berikutnya dimulai baris 1-3 terulang.
+
 ## Siklus Harian
 
+0. Jalankan **Alur Mulai Tugas (§0)** — pastikan plan `docs/current.md` ada & disetujui (arsip ke `docs/done/` bila ada plan lama).
 1. Pull `main` terbaru.
 2. Buat branch fitur: `feature/{ticket}-{desc}`.
-3. Tulis kode + test.
+3. Tulis kode + test (ikuti checklist di plan).
 4. Jalankan quality gate lokal (lihat di bawah).
 5. Commit (Conventional Commits, Bahasa Indonesia).
 6. Push → buat PR (GitHub) → Jenkins otomatis dijalankan via webhook.
