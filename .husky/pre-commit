@@ -1,2 +1,4 @@
 vendor/bin/pint --dirty
-bun run types:check
+if git diff --cached --name-only --diff-filter=ACM | grep -Eq 'resources/js/|package\.json|tsconfig|vite\.config'; then
+    bun run types:check
+fi

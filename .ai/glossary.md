@@ -35,6 +35,10 @@
 | **Registry** | Status modul (`modules_statuses.json`) |
 | **Passkey** | Kredensial WebAuthn pengganti password |
 | **Two-Factor (2FA)** | Verifikasi dua langkah, TOTP di Fortify |
+| **docs/current.md** | Plan tugas yang sedang berjalan — wajib disetujui sebelum dikerjakan (Aturan Emas #9) |
+| **docs/done/** | Arsip plan tugas selesai (`done/{nomor_nama_tugas}.md`) |
+| **Mini-plan** | Plan ringkas untuk tugas kecil (tanpa menunggu approval penuh — `.ai/workflow.md` §0) |
+| **vp** | Biner `vite-plus` untuk build/lint/check frontend |
 
 ---
 

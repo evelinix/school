@@ -59,6 +59,7 @@ DB::select('SELECT * FROM students WHERE nis = ?', [$nis]);
 - Tidak ada secret di repo; `.env` gitignored; `.env.example` hanya placeholder.
 - Jangan commit `.env` (berisi credential RustFS/DB asli; Jenkins regenerate APP_KEY dari `.env.example`).
 - Jangan log credential/secret.
+- **Jangan menyalin nilai kredensial/sertifikat** (isi `.env`, `.not_commit/ssl/`, `github_jenkins.md`, dll) ke dalam respons atau tool output — cukup rujuk path-nya; nilai tsb bisa bocor ke log/artefak.
 
 ## Audit Log
 

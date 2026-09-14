@@ -12,6 +12,7 @@
 | D-05 | **Modular Monolith (package-ready)** sebagai arsitektur target; monolit Laravel standar saat ini. Modul per domain (`Core`, `Kelas`, ...). | Cohesion + batas dependensi jelas tanpa mencekik dengan microservice. | `Modules/` (target) | (rancangan) |
 | D-06 | **Otorisasi berbasis permission** (spatie/laravel-permission), bukan berbasis role secara langsung. | Granular & mudah dikontrol; role adalah kumpulan permission. | Controller/policy | (rancangan) |
 | D-07 | **Bahasa Indonesia** untuk dokumentasi, komentar, dan commit message. | Konsistensi tim; CalVer changelog juga. | Repo | (scaffold) |
+| D-08 | **Gate commit/push lokal (Husky)**: pre-commit = `vendor/bin/pint --dirty` + `bun run types:check`; pre-push = `composer test` + `bun run types:check`. | Menyamai gate CI (`composer test` + `types:check`); lint/format JS via `bun run check:fix` dilakukan dev manual. | `.husky/*`, dev lokal | 2026-09-14 |
 
 ## Cara Menambahkan
 

@@ -6,6 +6,8 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| .husky/** | .ai/rules/general.md |
+| docs/** | .ai/rules/docs.md |
 | docs/api/** | .ai/rules/api.md |
 | database/migrations/** | .ai/rules/migrations.md |
 | tests/** | .ai/rules/tests.md |
@@ -31,3 +33,4 @@ Untuk path di luar tabel di atas, baca file konteks pada baris yang cocok dengan
 1. Baca file aturan pertama yang glob-nya cocok dengan path yang disentuh.
 2. Jalankan `grep -rin '<keyword>' .ai/rules` (+ `.ai/`) untuk aturan berbasis kata yang tidak tertangkap pemetaan path.
 3. Ketidakcocokan teks `.ai/` vs repo → anggap teks usang, ralat teksnya; jangan mengikuti teks lama yang bertentangan (lihat `.ai/workflow.md`).
+4. Sebelum mulai berkode, jalankan plan gate `docs/current.md` (`.ai/rules/docs.md`, `.ai/workflow.md` §0).
