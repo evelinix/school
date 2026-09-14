@@ -101,7 +101,7 @@ pipeline {
                                     },
                                     "credentials": []
                                 }
-                        JSON
+JSON
 
                         cat > "${JOB_DIR}/credentials-${ECOSYSTEM}.json" <<JSON
                                 [
@@ -112,7 +112,7 @@ pipeline {
                                         "password": "${GITHUB_ACCESS_TOKEN}"
                                     }
                                 ]
-                        JSON
+JSON
 
                         docker run --rm \
                             -v "${CHKOUT_DIR}:/home/dependabot/dependabot-core/repo" \
@@ -187,7 +187,7 @@ pipeline {
                                     },
                                     "credentials": []
                                 }
-                        JSON
+JSON
 
                         cat > "${JOB_DIR}/credentials-${ECOSYSTEM}.json" <<JSON
                                 [
@@ -198,7 +198,7 @@ pipeline {
                                         "password": "${GITHUB_ACCESS_TOKEN}"
                                     }
                                 ]
-                        JSON
+JSON
 
                         docker run --rm \
                             -v "${CHKOUT_DIR}:/home/dependabot/dependabot-core/repo" \
