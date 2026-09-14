@@ -9,6 +9,19 @@ Legend: ✨ feat · 🐛 fix · ⚡ perf · ♻️ refactor · 📝 docs · 🔧
 
 ---
 
+## [2026.09.4] — 2026-09-14 · "Konsistensi Kode" 🧹
+
+### ♻️ Refactor
+- `refactor: sederhanakan referensi class provider di bootstrap` (#—). <!-- TODO: nomor PR -->
+
+### 🐛 Fixed
+- `fix: lengkapi tipe return DebugController` — lulus pemeriksaan PHPStan dan mencegah return type implisit (#—). <!-- TODO: nomor PR -->
+
+### 📝 Documentation
+- `docs: tambah architectural decision records` — dokumentasikan keputusan modular monolith, React dengan Inertia.js, dan ULID sebagai primary key (#—). <!-- TODO: nomor PR -->
+
+---
+
 ## [2026.09.3] — 2026-09-14 · "Dependabot via Jenkins" 🐘
 
 ### 🔧 Chore
